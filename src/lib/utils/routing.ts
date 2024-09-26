@@ -16,7 +16,7 @@ export enum TransactionState {
 // Transacting with a wallet extension via a Web3 Provider
 async function sendTransactionViaExtension(wallet: ethers.providers.Web3Provider, transaction: ethers.providers.TransactionRequest): Promise<TransactionState> {
   try {
-    const receipt = await wallet.send('eth_sendTransaction', [transaction]);
+    const receipt = await wallet.getSigner()?.sendTransaction(transaction);
     if (receipt) {
       return TransactionState.Sent;
     } else {
@@ -42,9 +42,9 @@ export async function generateRoute(provider: ethers.providers.JsonRpcProvider, 
   };
 
   const route = await router.route(
-    CurrencyAmount.fromRawAmount(CurrentConfig.tokens.in, fromReadableAmount(amount, CurrentConfig.tokens.in.decimals).toString()),
-    CurrentConfig.tokens.out,
-    TradeType.EXACT_INPUT,
+    CurrencyAmount.fromRawAmount(CurrentConfig.tokens.out, fromReadableAmount(amount, CurrentConfig.tokens.out.decimals).toString()),
+    CurrentConfig.tokens.in,
+    TradeType.EXACT_OUTPUT,
     options
   );
 
