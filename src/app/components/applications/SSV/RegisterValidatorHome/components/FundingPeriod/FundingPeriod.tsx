@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Decimal from 'decimal.js';
 import { observer } from 'mobx-react';
 import Grid from '@mui/material/Grid';
@@ -23,6 +23,9 @@ import { getNetworkFeeAndLiquidationCollateral } from '~app/redux/network.slice'
 import useFetchWalletBalance from '~app/hooks/useFetchWalletBalance';
 import { getSelectedOperatorsFee } from '~app/redux/operator.slice.ts';
 import { NewValidatorRouteState } from '~app/Routes';
+import { generateRoute } from '~lib/utils/routing';
+import { useEthersSignerProvider } from '~app/hooks/useEthersSigner';
+import { getAccountAddress } from '~app/redux/wallet.slice';
 
 const OPTIONS = [
   { id: 1, timeText: '6 Months', days: 182.5 },
@@ -31,6 +34,8 @@ const OPTIONS = [
 ];
 
 const FundingPeriod = () => {
+  const accountAddress = useAppSelector(getAccountAddress);
+  const provider = useEthersSignerProvider();
   const [customPeriod, setCustomPeriod] = useState(config.GLOBAL_VARIABLE.DEFAULT_CLUSTER_PERIOD);
   const [checkedOption, setCheckedOption] = useState(OPTIONS[1]);
   const { networkFee, liquidationCollateralPeriod, minimumLiquidationCollateral } = useAppSelector(getNetworkFeeAndLiquidationCollateral);
@@ -55,9 +60,22 @@ const FundingPeriod = () => {
     minimumLiquidationCollateral
   });
   const totalCost = new Decimal(operatorsCost).add(networkCost).add(liquidationCollateralCost);
+  const [totalCostInUsdc, setTotalCostInUsdc] = useState('0');
+  const [isLoadingQuotes, setIsLoadingQuotes] = useState(false);
   const totalAmount = formatNumberToUi(Number(totalCost.mul(validatorStore.validatorsCount).toFixed(18)));
   const insufficientBalance = new Decimal(totalAmount.replace(',', '')).comparedTo(walletSsvBalance) === 1;
   const showLiquidationError = isCustomPayment && !insufficientBalance && timePeriodNotValid;
+
+  const getQuotesInUsdc = useCallback(async () => {
+    setIsLoadingQuotes(true);
+    const quotes = await generateRoute(provider!, accountAddress, Number(totalAmount));
+    setTotalCostInUsdc(quotes?.quote.toExact() || '0');
+    setIsLoadingQuotes(false);
+  }, [provider, accountAddress, totalAmount]);
+
+  useEffect(() => {
+    getQuotesInUsdc();
+  }, [getQuotesInUsdc]);
 
   const onPeriodChange = (event: any) => {
     const value = Math.floor(Number(event.target.value));
@@ -157,7 +175,23 @@ const FundingPeriod = () => {
               Total
             </Typography>
             <Typography className={classes.SsvPrice} style={{ marginBottom: 0 }}>
-              {totalAmount} SSV
+              {totalAmount} SSV or {isLoadingQuotes ? 'Loading USDC' : `${totalCostInUsdc} USDC`}
+            </Typography>
+          </Grid>
+          <Grid
+            container
+            item
+            style={{
+              justifyContent: 'space-between',
+              marginTop: -8,
+              marginBottom: 20
+            }}
+          >
+            <Typography className={classes.Text} style={{ marginBottom: 0 }}>
+              Your balance
+            </Typography>
+            <Typography className={classes.SsvPrice} style={{ marginBottom: 0 }}>
+              {formatNumberToUi(walletSsvBalance)} SSV
             </Typography>
           </Grid>
           <PrimaryButton text={'Next'} onClick={moveToNextPage} isDisabled={buttonDisableCondition} size={ButtonSize.XL} />

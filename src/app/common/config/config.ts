@@ -9,6 +9,25 @@ const {
   // contract,
 } = distributionHelper(networkId);
 
+import { Token } from '@uniswap/sdk-core';
+import { SSV_TOKEN, USDC_TOKEN } from '~app/constants/constants';
+
+// Inputs that configure this example to run
+export interface ExampleConfig {
+  tokens: {
+    in: Token;
+    out: Token;
+  };
+}
+
+// Example Configuration
+export const CurrentConfig: ExampleConfig = {
+  tokens: {
+    in: SSV_TOKEN,
+    out: USDC_TOKEN
+  }
+};
+
 export const config = {
   routes: {
     COUNTRY_NOT_SUPPORTED: '/compliance',
