@@ -23,8 +23,8 @@ export interface ExampleConfig {
 // Example Configuration
 export const CurrentConfig: ExampleConfig = {
   tokens: {
-    in: SSV_TOKEN,
-    out: USDC_TOKEN
+    in: USDC_TOKEN,
+    out: SSV_TOKEN
   }
 };
 
