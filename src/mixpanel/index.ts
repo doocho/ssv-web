@@ -3,7 +3,8 @@ import { config } from '~root/wagmi/config';
 
 import { merge } from 'lodash';
 import _mixpanel from 'mixpanel-browser';
-_mixpanel.init('98daf7d1d9e414c2fdd786641ec5b310');
+
+if (import.meta.env.VITE_MIXPANEL_TOKEN) _mixpanel.init(import.meta.env.VITE_MIXPANEL_TOKEN);
 
 const getNetworkName = () => {
   const chainId = getChainId(config);
@@ -12,11 +13,21 @@ const getNetworkName = () => {
 };
 
 export const getSuperProperties = () => ({
-  network: getNetworkName()
+  network: getNetworkName(),
+  $region: null,
+  $city: null
 });
 
 export const track: typeof _mixpanel.track = (event, properties) => {
+  if (!import.meta.env.VITE_MIXPANEL_TOKEN) return;
   _mixpanel.track(event, merge(properties, getSuperProperties()));
 };
 
-export const mixpanel = _mixpanel;
+export const mixpanel = import.meta.env.VITE_MIXPANEL_TOKEN
+  ? _mixpanel
+  : {
+      track: () => {},
+      track_pageview: () => {},
+      identify: () => {},
+      reset: () => {}
+    };
