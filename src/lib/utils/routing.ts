@@ -13,11 +13,29 @@ export enum TransactionState {
   Sent = 'Sent'
 }
 
+const sleep = async (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 // Transacting with a wallet extension via a Web3 Provider
 async function sendTransactionViaExtension(wallet: ethers.providers.Web3Provider, transaction: ethers.providers.TransactionRequest): Promise<TransactionState> {
   try {
-    const receipt = await wallet.getSigner()?.sendTransaction(transaction);
-    if (receipt) {
+    const txRes = await wallet.getSigner()?.sendTransaction(transaction);
+    let receipt = null;
+
+    while (receipt === null) {
+      try {
+        receipt = await wallet.getTransactionReceipt(txRes.hash);
+
+        if (receipt === null || receipt.status !== 1) {
+          await sleep(1000);
+          continue;
+        }
+      } catch (e) {
+        console.log(`Receipt error:`, e);
+        break;
+      }
+    }
+
+    if (receipt && receipt.status === 1) {
       return TransactionState.Sent;
     } else {
       return TransactionState.Failed;

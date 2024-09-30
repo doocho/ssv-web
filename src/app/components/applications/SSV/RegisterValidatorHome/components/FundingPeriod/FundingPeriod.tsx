@@ -23,9 +23,10 @@ import { getNetworkFeeAndLiquidationCollateral } from '~app/redux/network.slice'
 import useFetchWalletBalance from '~app/hooks/useFetchWalletBalance';
 import { getSelectedOperatorsFee } from '~app/redux/operator.slice.ts';
 import { NewValidatorRouteState } from '~app/Routes';
-import { generateRoute } from '~lib/utils/routing';
+import { executeRoute, generateRoute } from '~lib/utils/routing';
 import { useEthersSignerProvider } from '~app/hooks/useEthersSigner';
 import { getAccountAddress } from '~app/redux/wallet.slice';
+import { SwapRoute } from '@uniswap/smart-order-router';
 
 const OPTIONS = [
   { id: 1, timeText: '6 Months', days: 182.5 },
@@ -42,7 +43,7 @@ const FundingPeriod = () => {
   const stores = useStores();
   const classes = useStyles();
   const navigate = useNavigate();
-  const { walletSsvBalance } = useFetchWalletBalance();
+  const { walletSsvBalance, reloadBalance } = useFetchWalletBalance();
   const validatorStore: ValidatorStore = stores.Validator;
   const timePeriodNotValid = customPeriod < config.GLOBAL_VARIABLE.CLUSTER_VALIDITY_PERIOD_MINIMUM;
 
@@ -65,11 +66,16 @@ const FundingPeriod = () => {
   const totalAmount = formatNumberToUi(Number(totalCost.mul(validatorStore.validatorsCount).toFixed(18)));
   const insufficientBalance = new Decimal(totalAmount.replace(',', '')).comparedTo(walletSsvBalance) === 1;
   const showLiquidationError = isCustomPayment && !insufficientBalance && timePeriodNotValid;
+  const [route, setRoute] = useState<SwapRoute>();
 
   const getQuotesInUsdc = useCallback(async () => {
     setIsLoadingQuotes(true);
     const quotes = await generateRoute(provider!, accountAddress, Number(totalAmount));
-    setTotalCostInUsdc(quotes?.quote.toExact() || '0');
+    if (quotes) {
+      console.log('route', quotes);
+      setTotalCostInUsdc(quotes?.quote.toExact() || '0');
+      setRoute(quotes);
+    }
     setIsLoadingQuotes(false);
   }, [provider, accountAddress, totalAmount]);
 
@@ -97,6 +103,17 @@ const FundingPeriod = () => {
 
   const moveToNextPage = () => {
     navigate(config.routes.SSV.VALIDATOR.ACCOUNT_BALANCE_AND_FEE, { state: { newValidatorFundingPeriod: periodOfTime } satisfies NewValidatorRouteState });
+  };
+
+  const handleClickSwap = async () => {
+    if (route) {
+      const res = await executeRoute(provider!, accountAddress, provider!, route);
+      console.log('res', res);
+      if (res === 'Sent') {
+        // reload ssv balance
+        reloadBalance();
+      }
+    }
   };
 
   return (
@@ -194,6 +211,7 @@ const FundingPeriod = () => {
               {formatNumberToUi(walletSsvBalance)} SSV
             </Typography>
           </Grid>
+          <PrimaryButton text={'Swap'} onClick={handleClickSwap} size={ButtonSize.XL} />
           <PrimaryButton text={'Next'} onClick={moveToNextPage} isDisabled={buttonDisableCondition} size={ButtonSize.XL} />
         </Grid>
       ]}
