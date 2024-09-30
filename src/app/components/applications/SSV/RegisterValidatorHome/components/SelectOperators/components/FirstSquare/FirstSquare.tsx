@@ -95,9 +95,12 @@ const FirstSquare = ({ editPage, clusterSize, setClusterSize, clusterBox }: { ed
   ];
 
   const getDsrvOperator = async () => {
-    const response = await getOperatorsOperatorService({ search: 'dsrv' });
+    const response = await getOperatorsOperatorService({ search: 'dsrv', page: 1, perPage: 20 });
     if (response?.operators.length > 0) {
-      selectOperatorHandling(response.operators.filter((operator) => !operator.is_private)[0]);
+      const dsrvOperator = response.operators.filter((operator) => operator.name === 'DSRV')[0];
+      if (dsrvOperator) {
+        selectOperatorHandling(dsrvOperator);
+      }
     }
   };
 
