@@ -18,16 +18,17 @@ import { getStoredNetwork } from '~root/providers/networkInfo.provider';
 import { getLiquidationCollateralPerValidator } from '~root/services/validator.service';
 import { PrimaryButton } from '~app/atomicComponents';
 import { ButtonSize } from '~app/enums/Button.enum';
-import { useAppSelector } from '~app/hooks/redux.hook';
+import { useAppDispatch, useAppSelector } from '~app/hooks/redux.hook';
 import { getNetworkFeeAndLiquidationCollateral } from '~app/redux/network.slice';
 import useFetchWalletBalance from '~app/hooks/useFetchWalletBalance';
 import { getSelectedOperatorsFee } from '~app/redux/operator.slice.ts';
 import { NewValidatorRouteState } from '~app/Routes';
-import { executeRoute, generateRoute } from '~lib/utils/routing';
+import { executeRoute, generateRoute, TransactionState } from '~lib/utils/routing';
 import { useEthersSignerProvider } from '~app/hooks/useEthersSigner';
 import { getAccountAddress } from '~app/redux/wallet.slice';
 import { SwapRoute } from '@uniswap/smart-order-router';
 import { Stack } from '@mui/system';
+import { setMessageAndSeverity } from '~app/redux/notifications.slice';
 
 const OPTIONS = [
   { id: 1, timeText: '6 Months', days: 182.5 },
@@ -36,6 +37,7 @@ const OPTIONS = [
 ];
 
 const FundingPeriod = () => {
+  const dispatch = useAppDispatch();
   const accountAddress = useAppSelector(getAccountAddress);
   const provider = useEthersSignerProvider();
   const [customPeriod, setCustomPeriod] = useState(config.GLOBAL_VARIABLE.DEFAULT_CLUSTER_PERIOD);
@@ -110,12 +112,26 @@ const FundingPeriod = () => {
   const handleClickSwap = async () => {
     if (route) {
       setSwapStatus('APPROVING');
-      const res = await executeRoute(provider!, accountAddress, provider!, route, () => setSwapStatus('SWAPING'));
-      console.log('res', res);
-      if (res === 'Sent') {
-        setSwapStatus('INIT');
-        // reload ssv balance
-        reloadBalance();
+      const result = await executeRoute(provider!, accountAddress, provider!, route, () => setSwapStatus('SWAPING'));
+      switch (result) {
+        case TransactionState.Sent:
+          setSwapStatus('INIT');
+          reloadBalance();
+          break;
+        case TransactionState.Failed:
+          setSwapStatus('INIT');
+          dispatch(
+            setMessageAndSeverity({
+              message: 'Tranaction failed',
+              severity: 'error'
+            })
+          );
+          break;
+        case TransactionState.Rejected:
+          setSwapStatus('INIT');
+          break;
+        default:
+          break;
       }
     }
   };
@@ -127,9 +143,9 @@ const FundingPeriod = () => {
       case 'SWAPING':
         return 'Swapping USDC to SSV';
       case 'INIT':
-        return `Swap (${isLoadingQuotes ? 'Loading USDC' : `${totalCostInUsdc} USDC`} USDC to ${totalAmount} SSV)`;
+        return `Swap (${isLoadingQuotes ? 'Loading USDC' : `${totalCostInUsdc} USDC`} to ${totalAmount} SSV)`;
       default:
-        return `Swap (${isLoadingQuotes ? 'Loading USDC' : `${totalCostInUsdc} USDC`} USDC to ${totalAmount} SSV)`;
+        return `Swap (${isLoadingQuotes ? 'Loading USDC' : `${totalCostInUsdc} USDC`} to ${totalAmount} SSV)`;
     }
   }, [isLoadingQuotes, swapStatus, totalAmount, totalCostInUsdc]);
 
