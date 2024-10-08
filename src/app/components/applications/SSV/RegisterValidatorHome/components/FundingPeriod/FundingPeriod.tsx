@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Decimal from 'decimal.js';
 import { observer } from 'mobx-react';
 import Grid from '@mui/material/Grid';
@@ -27,6 +27,7 @@ import { executeRoute, generateRoute } from '~lib/utils/routing';
 import { useEthersSignerProvider } from '~app/hooks/useEthersSigner';
 import { getAccountAddress } from '~app/redux/wallet.slice';
 import { SwapRoute } from '@uniswap/smart-order-router';
+import { Stack } from '@mui/system';
 
 const OPTIONS = [
   { id: 1, timeText: '6 Months', days: 182.5 },
@@ -67,6 +68,7 @@ const FundingPeriod = () => {
   const insufficientBalance = new Decimal(totalAmount.replace(',', '')).comparedTo(walletSsvBalance) === 1;
   const showLiquidationError = isCustomPayment && !insufficientBalance && timePeriodNotValid;
   const [route, setRoute] = useState<SwapRoute>();
+  const [swapStatus, setSwapStatus] = useState<'INIT' | 'APPROVING' | 'SWAPING'>('INIT');
 
   const getQuotesInUsdc = useCallback(async () => {
     setIsLoadingQuotes(true);
@@ -107,14 +109,29 @@ const FundingPeriod = () => {
 
   const handleClickSwap = async () => {
     if (route) {
-      const res = await executeRoute(provider!, accountAddress, provider!, route);
+      setSwapStatus('APPROVING');
+      const res = await executeRoute(provider!, accountAddress, provider!, route, () => setSwapStatus('SWAPING'));
       console.log('res', res);
       if (res === 'Sent') {
+        setSwapStatus('INIT');
         // reload ssv balance
         reloadBalance();
       }
     }
   };
+
+  const swapButtonText = useMemo(() => {
+    switch (swapStatus) {
+      case 'APPROVING':
+        return 'Approving USDC';
+      case 'SWAPING':
+        return 'Swapping USDC to SSV';
+      case 'INIT':
+        return `Swap (${isLoadingQuotes ? 'Loading USDC' : `${totalCostInUsdc} USDC`} USDC to ${totalAmount} SSV)`;
+      default:
+        return `Swap (${isLoadingQuotes ? 'Loading USDC' : `${totalCostInUsdc} USDC`} USDC to ${totalAmount} SSV)`;
+    }
+  }, [isLoadingQuotes, swapStatus, totalAmount, totalCostInUsdc]);
 
   return (
     <BorderScreen
@@ -211,8 +228,10 @@ const FundingPeriod = () => {
               {formatNumberToUi(walletSsvBalance)} SSV
             </Typography>
           </Grid>
-          <PrimaryButton text={'Swap'} onClick={handleClickSwap} size={ButtonSize.XL} />
-          <PrimaryButton text={'Next'} onClick={moveToNextPage} isDisabled={buttonDisableCondition} size={ButtonSize.XL} />
+          <Stack direction="column" width="100%" gap={2}>
+            <PrimaryButton text={swapButtonText} onClick={handleClickSwap} size={ButtonSize.XL} isLoading={swapStatus === 'APPROVING' || swapStatus === 'SWAPING'} />
+            <PrimaryButton text={'Next'} onClick={moveToNextPage} isDisabled={buttonDisableCondition} size={ButtonSize.XL} />
+          </Stack>
         </Grid>
       ]}
     />

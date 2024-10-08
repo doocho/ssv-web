@@ -73,7 +73,8 @@ export async function executeRoute(
   provider: ethers.providers.JsonRpcProvider,
   walletAddress: string,
   wallet: ethers.providers.Web3Provider,
-  route: SwapRoute
+  route: SwapRoute,
+  afterApprove?: () => void
 ): Promise<TransactionState> {
   if (!walletAddress || !provider) {
     throw new Error('Cannot execute a trade without a connected wallet');
@@ -85,6 +86,7 @@ export async function executeRoute(
   if (tokenApproval !== TransactionState.Sent) {
     return TransactionState.Failed;
   }
+  afterApprove && afterApprove();
 
   const res = await sendTransactionViaExtension(wallet, {
     data: route.methodParameters?.calldata,
