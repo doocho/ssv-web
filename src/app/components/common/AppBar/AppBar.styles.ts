@@ -16,11 +16,11 @@ export const useStyles = makeStyles((theme: any) => ({
         backgroundSize: 'contain',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        backgroundImage: `url(/images/logo/${theme.darkMode ? 'light' : 'dark'}.svg)`,
+        backgroundImage: `url(/images/logo/${theme.darkMode ? 'dsrv-master-light' : 'dsrv-master-dark'}.svg)`,
         '@media only screen and (max-width: 500px)': {
             height: 40,
             width: 28.5,
-            backgroundImage: `url(/images/logo/${theme.darkMode ? 'small_light' : 'small_light'}.svg)`,
+            backgroundImage: `url(/images/logo/${theme.darkMode ? 'dsrv-favicon-dark-circle' : 'dsrv-favicon-light-circle'}.svg)`,
         },
 
     },

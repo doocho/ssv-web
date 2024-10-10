@@ -94,6 +94,16 @@ const FirstSquare = ({ editPage, clusterSize, setClusterSize, clusterBox }: { ed
     { type: '', displayName: '', sortable: true }
   ];
 
+  const getDsrvOperator = async () => {
+    const response = await getOperatorsOperatorService({ search: 'dsrv', page: 1, perPage: 20 });
+    if (response?.operators.length > 0) {
+      const dsrvOperator = response.operators.filter((operator) => operator.name === 'DSRV')[0];
+      if (dsrvOperator) {
+        selectOperatorHandling(dsrvOperator);
+      }
+    }
+  };
+
   const selectOperatorHandling = (operator: IOperator) => {
     if (Object.values(selectedOperators).some((selectedOperator: IOperator) => selectedOperator.id === operator.id)) {
       for (const [key, value] of Object.entries(selectedOperators)) {
@@ -145,6 +155,7 @@ const FirstSquare = ({ editPage, clusterSize, setClusterSize, clusterBox }: { ed
   }, 1000);
 
   useEffect(() => {
+    getDsrvOperator();
     dispatch(fetchAndSetOperatorValidatorsLimit());
   }, []);
 

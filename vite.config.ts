@@ -10,13 +10,13 @@ export default defineConfig(({ mode }) => {
       sourcemap: true,
       rollupOptions: {
         output: {
-          sourcemapExcludeSources: true  // Ignore sources in node_modules
+          sourcemapExcludeSources: true // Ignore sources in node_modules
         }
       }
     },
     server: {
       port: 3000,
-      open: true,
+      open: true
     },
     plugins: [
       react(),
@@ -38,7 +38,8 @@ export default defineConfig(({ mode }) => {
         '~lib': path.resolve('./src/lib'),
         '~root': path.resolve('./src'),
         '~images': path.resolve('./src/images'),
-        '~redux': path.resolve('./src/redux/*')
+        '~redux': path.resolve('./src/redux/*'),
+        jsbi: path.resolve(__dirname, '.', 'node_modules', 'jsbi', 'dist', 'jsbi-cjs.js')
       }
     }
   };

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Decimal from 'decimal.js';
 import { observer } from 'mobx-react';
 import Grid from '@mui/material/Grid';
@@ -18,11 +18,17 @@ import { getStoredNetwork } from '~root/providers/networkInfo.provider';
 import { getLiquidationCollateralPerValidator } from '~root/services/validator.service';
 import { PrimaryButton } from '~app/atomicComponents';
 import { ButtonSize } from '~app/enums/Button.enum';
-import { useAppSelector } from '~app/hooks/redux.hook';
+import { useAppDispatch, useAppSelector } from '~app/hooks/redux.hook';
 import { getNetworkFeeAndLiquidationCollateral } from '~app/redux/network.slice';
 import useFetchWalletBalance from '~app/hooks/useFetchWalletBalance';
 import { getSelectedOperatorsFee } from '~app/redux/operator.slice.ts';
 import { NewValidatorRouteState } from '~app/Routes';
+import { executeRoute, generateRoute, TransactionState } from '~lib/utils/routing';
+import { useEthersSignerProvider } from '~app/hooks/useEthersSigner';
+import { getAccountAddress } from '~app/redux/wallet.slice';
+import { SwapRoute } from '@uniswap/smart-order-router';
+import { Stack } from '@mui/system';
+import { setMessageAndSeverity } from '~app/redux/notifications.slice';
 
 const OPTIONS = [
   { id: 1, timeText: '6 Months', days: 182.5 },
@@ -31,13 +37,16 @@ const OPTIONS = [
 ];
 
 const FundingPeriod = () => {
+  const dispatch = useAppDispatch();
+  const accountAddress = useAppSelector(getAccountAddress);
+  const provider = useEthersSignerProvider();
   const [customPeriod, setCustomPeriod] = useState(config.GLOBAL_VARIABLE.DEFAULT_CLUSTER_PERIOD);
   const [checkedOption, setCheckedOption] = useState(OPTIONS[1]);
   const { networkFee, liquidationCollateralPeriod, minimumLiquidationCollateral } = useAppSelector(getNetworkFeeAndLiquidationCollateral);
   const stores = useStores();
   const classes = useStyles();
   const navigate = useNavigate();
-  const { walletSsvBalance } = useFetchWalletBalance();
+  const { walletSsvBalance, reloadBalance } = useFetchWalletBalance();
   const validatorStore: ValidatorStore = stores.Validator;
   const timePeriodNotValid = customPeriod < config.GLOBAL_VARIABLE.CLUSTER_VALIDITY_PERIOD_MINIMUM;
 
@@ -55,9 +64,28 @@ const FundingPeriod = () => {
     minimumLiquidationCollateral
   });
   const totalCost = new Decimal(operatorsCost).add(networkCost).add(liquidationCollateralCost);
+  const [totalCostInUsdc, setTotalCostInUsdc] = useState('0');
+  const [isLoadingQuotes, setIsLoadingQuotes] = useState(false);
   const totalAmount = formatNumberToUi(Number(totalCost.mul(validatorStore.validatorsCount).toFixed(18)));
   const insufficientBalance = new Decimal(totalAmount.replace(',', '')).comparedTo(walletSsvBalance) === 1;
   const showLiquidationError = isCustomPayment && !insufficientBalance && timePeriodNotValid;
+  const [route, setRoute] = useState<SwapRoute>();
+  const [swapStatus, setSwapStatus] = useState<'INIT' | 'APPROVING' | 'SWAPING'>('INIT');
+
+  const getQuotesInUsdc = useCallback(async () => {
+    setIsLoadingQuotes(true);
+    const quotes = await generateRoute(provider!, accountAddress, Number(totalAmount));
+    if (quotes) {
+      console.log('route', quotes);
+      setTotalCostInUsdc(quotes?.quote.toExact() || '0');
+      setRoute(quotes);
+    }
+    setIsLoadingQuotes(false);
+  }, [provider, accountAddress, totalAmount]);
+
+  useEffect(() => {
+    getQuotesInUsdc();
+  }, [getQuotesInUsdc]);
 
   const onPeriodChange = (event: any) => {
     const value = Math.floor(Number(event.target.value));
@@ -80,6 +108,46 @@ const FundingPeriod = () => {
   const moveToNextPage = () => {
     navigate(config.routes.SSV.VALIDATOR.ACCOUNT_BALANCE_AND_FEE, { state: { newValidatorFundingPeriod: periodOfTime } satisfies NewValidatorRouteState });
   };
+
+  const handleClickSwap = async () => {
+    if (route) {
+      setSwapStatus('APPROVING');
+      const result = await executeRoute(provider!, accountAddress, provider!, route, () => setSwapStatus('SWAPING'));
+      switch (result) {
+        case TransactionState.Sent:
+          setSwapStatus('INIT');
+          reloadBalance();
+          break;
+        case TransactionState.Failed:
+          setSwapStatus('INIT');
+          dispatch(
+            setMessageAndSeverity({
+              message: 'Tranaction failed',
+              severity: 'error'
+            })
+          );
+          break;
+        case TransactionState.Rejected:
+          setSwapStatus('INIT');
+          break;
+        default:
+          break;
+      }
+    }
+  };
+
+  const swapButtonText = useMemo(() => {
+    switch (swapStatus) {
+      case 'APPROVING':
+        return 'Approving USDC';
+      case 'SWAPING':
+        return 'Swapping USDC to SSV';
+      case 'INIT':
+        return `Swap (${isLoadingQuotes ? 'Loading USDC' : `${totalCostInUsdc} USDC`} to ${totalAmount} SSV)`;
+      default:
+        return `Swap (${isLoadingQuotes ? 'Loading USDC' : `${totalCostInUsdc} USDC`} to ${totalAmount} SSV)`;
+    }
+  }, [isLoadingQuotes, swapStatus, totalAmount, totalCostInUsdc]);
 
   return (
     <BorderScreen
@@ -157,10 +225,29 @@ const FundingPeriod = () => {
               Total
             </Typography>
             <Typography className={classes.SsvPrice} style={{ marginBottom: 0 }}>
-              {totalAmount} SSV
+              {totalAmount} SSV or {isLoadingQuotes ? 'Loading USDC' : `${totalCostInUsdc} USDC`}
             </Typography>
           </Grid>
-          <PrimaryButton text={'Next'} onClick={moveToNextPage} isDisabled={buttonDisableCondition} size={ButtonSize.XL} />
+          <Grid
+            container
+            item
+            style={{
+              justifyContent: 'space-between',
+              marginTop: -8,
+              marginBottom: 20
+            }}
+          >
+            <Typography className={classes.Text} style={{ marginBottom: 0 }}>
+              Your balance
+            </Typography>
+            <Typography className={classes.SsvPrice} style={{ marginBottom: 0 }}>
+              {formatNumberToUi(walletSsvBalance)} SSV
+            </Typography>
+          </Grid>
+          <Stack direction="column" width="100%" gap={2}>
+            <PrimaryButton text={swapButtonText} onClick={handleClickSwap} size={ButtonSize.XL} isLoading={swapStatus === 'APPROVING' || swapStatus === 'SWAPING'} />
+            <PrimaryButton text={'Next'} onClick={moveToNextPage} isDisabled={buttonDisableCondition} size={ButtonSize.XL} />
+          </Stack>
         </Grid>
       ]}
     />
