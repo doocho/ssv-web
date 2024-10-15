@@ -18,7 +18,7 @@ const buttonVariants = cva(
         link: 'text-primary underline-offset-4 hover:underline'
       },
       colorScheme: {
-        wallet: 'bg-[#F9FBFC] hover:bg-[#F2F6FA] text-black dark:bg-[#062031] dark:hover:bg-[#011627]'
+        wallet: 'bg-[#F9FBFC] hover:bg-[#F2F6FA] text-black dark:text-white dark:bg-[#062031] dark:hover:bg-[#011627]'
       },
       size: {
         default: 'h-10 px-4 py-2 font-semibold text-md rounded-lg',

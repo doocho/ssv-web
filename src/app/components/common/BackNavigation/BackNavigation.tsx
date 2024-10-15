@@ -40,7 +40,7 @@ type BackNavigationProps = {
 
 const BackNavigation = ({ color, onClick, backButtonRedirect, text, isDefaultBack = true }: BackNavigationProps) => {
   const navigate = useNavigate();
-  const defaultColor = '#A1ACBE';
+  const defaultColor = '#000000';
   const usedColor = color || defaultColor;
   const isLoading = useAppSelector(getIsLoading);
 

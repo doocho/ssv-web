@@ -1,70 +1,69 @@
 declare module '@mui/material/styles' {
-    interface Theme {
-        colors?: any
-        opacity?: any,
-        darkMode?: any
-        appSpacing?: any
-        newStage?: boolean,
-        applicationBackgroundColor?: any
-    }
+  interface Theme {
+    colors?: any;
+    opacity?: any;
+    darkMode?: any;
+    appSpacing?: any;
+    newStage?: boolean;
+    applicationBackgroundColor?: any;
+  }
 
-    interface ThemeOptions {
-        colors?: any
-        opacity?: any,
-        darkMode?: any
-        appSpacing?: any
-        newStage?: boolean,
-        applicationBackgroundColor?: any
-    }
+  interface ThemeOptions {
+    colors?: any;
+    opacity?: any;
+    darkMode?: any;
+    appSpacing?: any;
+    newStage?: boolean;
+    applicationBackgroundColor?: any;
+  }
 }
 
 type ThemeParams = {
-    isDarkMode?: boolean,
+  isDarkMode?: boolean;
 };
 
 export const AppTheme = ({ isDarkMode }: ThemeParams): any => {
-    return {
-        spacing: 4,
-        darkMode: isDarkMode,
-        applicationBackgroundColor: isDarkMode ? '#011627' : '#f4f7fa',
-        colors: {
-            // @ts-ignore
-            gray0: isDarkMode ? '#062031' : '#f9fbfc',
-            gray10: isDarkMode ? '#011627' : '#f4f7fa',
-            gray20: isDarkMode ? '#34455a' : '#e6eaf7',
-            gray30: isDarkMode ? '#63768b' : '#cbd3e5',
-            gray40: '#97a5ba',
-            gray60: isDarkMode ? '#cbd3e5' : '#63768b',
-            gray80: isDarkMode ? '#e6eaf7' : '#34455a',
-            gray90: isDarkMode ? '#fdfefe' : '#0b2a3c', // should be gray 70
-            gray100: isDarkMode ? '#f9fbfc' : '#062031',
-            black: isDarkMode ? '#f4f7fa' : '#011627',
-            white: isDarkMode ? '#0b2a3c' : '#fdfefe',
-            primaryBlue: '#1ba5f8',
-            shade20: isDarkMode ? '#49b6f9' : '#0792e8',
-            shade40: isDarkMode ? '#76c8fb' : '#067bc4',
-            shade70: isDarkMode ? '#bbe4fd' : '#045588',
-            shade80: isDarkMode ? '#d1edfe' : '#034872',
-            shade90: isDarkMode ? '#e8f6fe' : '#033a5d',
-            tint20: isDarkMode ? '#0792e8' : '#49b6f9',
-            tint40: isDarkMode ? '#067bc4' : '#76c8fb',
-            tint70: isDarkMode ? '#045588' : '#bbe4fd',
-            tint80: isDarkMode ? '#034872' : '#d1edfe',
-            tint90: isDarkMode ? '#033a5d' : '#e8f6fe',
-            primarySuccessDark: isDarkMode ? '#08c858' : '#06b64f',
-            primaryWarningRegular: 'rgba(255, 210, 10, 0.2)',
-            squareScreenBackground: isDarkMode ? '#0b2a3c' : '#fdfefe',
-            squareScreenBackgroundDeleted: isDarkMode ? '#0b2a3c' : '#f8fcff',
-            primaryError: '#ec1c26',
-            primarySuccess: '#ec1c26',
-            primaryErrorRegular: isDarkMode ? 'rgba(236, 28, 38, 0.32)' : 'rgba(236, 28, 38, 0.12)',
-            primarySuccessRegularOpacity: isDarkMode ? 'rgba(8, 200, 88, 0.32)' : 'rgba(8, 200, 88, 0.16)',
-            warning: '#ffd20a',
-        },
-        opacity: {
-            lowPriority: 1,
-            mediumPriority: 2,
-            highPriority: 3,
-        },
-    };
+  return {
+    spacing: 4,
+    darkMode: isDarkMode,
+    applicationBackgroundColor: isDarkMode ? '#000000' : '#ffffff', // 다크 모드에서 검은 배경, 라이트 모드에서 흰 배경
+    colors: {
+      gray0: isDarkMode ? '#0d0d0d' : '#f9f9f9', // 어두운 회색과 밝은 회색
+      gray10: isDarkMode ? '#000000' : '#f4f4f4', // 다크 모드에서 완전 블랙, 라이트 모드에서 밝은 회색
+      gray20: isDarkMode ? '#1a1a1a' : '#e6e6e6', // 더 짙은 회색
+      gray30: isDarkMode ? '#2e2e2e' : '#cccccc', // 중간 회색
+      gray40: '#404040', // 회색 계열 고정
+      gray60: isDarkMode ? '#cccccc' : '#2e2e2e', // 회색 대조 강화
+      gray80: isDarkMode ? '#e6e6e6' : '#1a1a1a', // 밝은 회색과 어두운 회색
+      gray90: isDarkMode ? '#f7f7f7' : '#0d0d0d', // 거의 흰색과 거의 블랙
+      gray100: isDarkMode ? '#f9f9f9' : '#0d0d0d', // 흰색과 검은색 반전
+      black: isDarkMode ? '#ffffff' : '#000000', // 흰색과 블랙 반전
+      white: isDarkMode ? '#000000' : '#ffffff', // 다크 모드에서 블랙, 라이트 모드에서 흰색
+      primaryBlue: isDarkMode ? '#1a1a1a' : '#f0f0f0', // 블루 대신 중립적인 회색
+      shade20: isDarkMode ? '#333333' : '#cccccc', // 회색 계열
+      shade40: isDarkMode ? '#4d4d4d' : '#b3b3b3', // 어두운 회색
+      shade70: isDarkMode ? '#6f6f6f' : '#999999', // 짙은 회색과 중간 회색
+      shade80: isDarkMode ? '#8c8c8c' : '#666666', // 회색 톤 차이 강화
+      shade90: isDarkMode ? '#a6a6a6' : '#404040', // 밝은 회색에서 중간 회색으로
+      tint20: isDarkMode ? '#333333' : '#cccccc', // 회색 계열로 통일
+      tint40: isDarkMode ? '#4d4d4d' : '#b3b3b3',
+      tint70: isDarkMode ? '#6f6f6f' : '#999999',
+      tint80: isDarkMode ? '#8c8c8c' : '#666666',
+      tint90: isDarkMode ? '#a6a6a6' : '#404040',
+      primarySuccessDark: isDarkMode ? '#1a1a1a' : '#4d4d4d', // 성공 색상도 블랙 계열로 조정
+      primaryWarningRegular: 'rgba(255, 210, 10, 0.2)', // 경고 색상 유지
+      squareScreenBackground: isDarkMode ? '#0d0d0d' : '#ffffff', // 배경 색상
+      squareScreenBackgroundDeleted: isDarkMode ? '#1a1a1a' : '#f0f0f0', // 삭제된 배경 색상
+      primaryError: '#ec1c26', // 에러 색상 유지
+      primarySuccess: '#1a1a1a', // 성공 색상을 블랙으로 조정
+      primaryErrorRegular: isDarkMode ? 'rgba(236, 28, 38, 0.32)' : 'rgba(236, 28, 38, 0.12)', // 에러 관련 색상 유지
+      primarySuccessRegularOpacity: isDarkMode ? 'rgba(26, 26, 26, 0.32)' : 'rgba(26, 26, 26, 0.16)', // 성공 색상도 블랙 계열로 조정
+      warning: '#ffd20a' // 경고 색상 유지
+    },
+    opacity: {
+      lowPriority: 1,
+      mediumPriority: 2,
+      highPriority: 3
+    }
+  };
 };

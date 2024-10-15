@@ -104,23 +104,28 @@ const AppBar = ({ buttons }: { buttons?: Button[] }) => {
       <Grid item className={classes.GridItem}>
         <Grid item onClick={logoAction} className={classes.AppBarIcon} />
       </Grid>
-      <Grid item container xs className={classes.GridItem} style={{ gap: 40, marginLeft: 40 }}>
-        {buttons?.map((button, index) => {
-          if (button?.options && button?.options?.length > 0) {
-            return (
-              <AppLinksToggle key={index} options={button?.options?.map((option: any) => ({ label: option.label, link: option.link, bottomLine: option.bottomLine || false }))} />
-            );
-          } else {
-            return (
-              <Grid item key={index} onClick={button.onClick} className={`${classes.Button} ${button.blueColor && hasOperatorsOrValidators ? classes.BlueLink : ''}`}>
-                {button.label}
-              </Grid>
-            );
-          }
-        })}
-      </Grid>
+      <Grid item container xs className={classes.GridItem} style={{ gap: 40, marginLeft: 40 }}></Grid>
       <Grid item className={classes.GridItem}>
         <Grid item container style={{ alignItems: 'center' }}>
+          {buttons?.map((button, index) => {
+            if (button?.options && button?.options?.length > 0) {
+              return (
+                <AppLinksToggle key={index} options={button?.options?.map((option: any) => ({ label: option.label, link: option.link, bottomLine: option.bottomLine || false }))} />
+              );
+            } else {
+              return (
+                <Grid
+                  style={{ marginRight: 40 }}
+                  item
+                  key={index}
+                  onClick={button.onClick}
+                  className={`${classes.Button} ${button.blueColor && hasOperatorsOrValidators ? classes.BlueLink : ''}`}
+                >
+                  {button.label}
+                </Grid>
+              );
+            }
+          })}
           <Grid item>
             <WalletButton />
           </Grid>

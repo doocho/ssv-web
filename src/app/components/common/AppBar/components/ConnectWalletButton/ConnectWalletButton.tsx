@@ -62,7 +62,7 @@ export const WalletButton = ({ dontShowConnectedStatus = false, disableOnUnsuppo
 
               return (
                 <div className="flex gap-3">
-                  <Button size="network" variant="secondary" colorScheme="wallet" onClick={openChainModal} className="flex items-center gap-3" type="button">
+                  <Button size="network" variant="destructive" colorScheme="wallet" onClick={openChainModal} className="flex items-center gap-3" type="button">
                     {chain.hasIcon && (
                       <div
                         className="size-6"
@@ -81,7 +81,7 @@ export const WalletButton = ({ dontShowConnectedStatus = false, disableOnUnsuppo
                       <span> {chain.name}</span> <ChevronDown className="size-5" />
                     </div>
                   </Button>
-                  <Button size="wallet" className="gap-3" variant="secondary" colorScheme="wallet" onClick={openAccountModal}>
+                  <Button size="wallet" className="gap-3" variant="default" colorScheme="wallet" onClick={openAccountModal}>
                     <img className="size-6" src={getWalletIconSrc(connector?.name)} alt={`Connected to ${account.address}`} />
                     {formatAddress(account.address)}
                   </Button>

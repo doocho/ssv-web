@@ -24,6 +24,7 @@ import { getColors } from '~root/themes';
 import './globals.css';
 import { useTrackPageViews } from '~root/mixpanel/useTrackPageViews';
 import { useIdentify } from '~root/mixpanel/useIdentify';
+import { CircularProgress } from '@mui/material';
 
 const LoaderWrapper = styled.div<{ theme: any }>`
   display: flex;
@@ -40,9 +41,9 @@ const LoaderWrapper = styled.div<{ theme: any }>`
   background-color: ${({ theme }) => theme.colors.loaderColor};
 `;
 
-const Loader = styled.img<{ src: string }>`
-  width: 200px;
-`;
+// const Loader = styled.img<{ src: string }>`
+//   width: 200px;
+// `;
 
 configure({ enforceActions: 'never' });
 
@@ -127,7 +128,7 @@ const App = () => {
               <GlobalStyle />
               {isShowSsvLoader && (
                 <LoaderWrapper>
-                  <Loader src={'/images/ssv-loader.svg'} />
+                  <CircularProgress color="primary" />
                 </LoaderWrapper>
               )}
               <BarMessage />
